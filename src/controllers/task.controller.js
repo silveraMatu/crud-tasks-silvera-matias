@@ -174,7 +174,7 @@ export const getAlltask = async (req, res) => {
         attributes: ["name", "email"]
       }
     });
-    if (tasks.length === 0)
+    if (!tasks.length)
       throw {
         Message: "La base de datos está vacía.",
         statusCode: 404,

@@ -22,7 +22,7 @@ export const UserModel = sequelize.define("user", {
 
 UserModel.hasMany(TaskModel, {
     foreignKey: "user_id",
-    as: "task",
+    as: "tasks",
     allowNull: false
 })
 

@@ -125,7 +125,14 @@ export const updateUser = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await UserModel.findAll({ attributes: ["name", "email"] });
+    const users = await UserModel.findAll({ 
+      attributes: ["name", "email"],
+      include: {
+        model: TaskModel,
+        as: "tasks",
+        attributes: ["title", "description", "is_complete"]
+      }
+    });
     if (!users.length)
       throw {
         Message: "La base de datos está vacía.",
@@ -133,6 +140,7 @@ export const getAllUsers = async (req, res) => {
       };
     res.status(200).json(users);
   } catch (err) {
+    console.log(err);
     res.status(err.statusCode || 500).json({
       Message: err.Message || "Error interno del servidor",
       statusCode: err.statusCode || 500,
@@ -144,6 +152,11 @@ export const getUserById = async (req, res) => {
   try {
     const user = await UserModel.findByPk(id, {
       attributes: ["name", "email"],
+      include:{
+        model: TaskModel,
+        as: "tasks",
+        attributes: ["title", "description", "is_complete"]
+      }
     });
     if (!user)
       throw {
