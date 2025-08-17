@@ -21,5 +21,12 @@ export const UserModel = sequelize.define("user", {
 })
 
 UserModel.hasMany(TaskModel, {
-    foreignKey: "userId",
+    foreignKey: "user_id",
+    as: "task",
+    allowNull: false
+})
+
+TaskModel.belongsTo(UserModel, {
+    foreignKey: "user_id",
+    as: "author"
 })

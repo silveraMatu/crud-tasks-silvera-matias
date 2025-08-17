@@ -1,5 +1,6 @@
 import { Op } from "sequelize";
 import { TaskModel } from "../models/task.model.js";
+import { UserModel } from "../models/user.model.js";
 
 function trimValues(req) {
   for (const key in req.body) {
@@ -78,26 +79,35 @@ export const createTask = async (req, res) => {
   trimValues(req);
 
   try {
-    reqControlCreate(req, ["title", "description", "isComplete"], ["title", "description", "isComplete"]);
+    reqControlCreate(req, ["title", "description", "is_complete", "user_id"], ["title", "description", "is_complete", "user_id"]);
     notNullValues(req.body);
     lengthValidation(req.body);
     await titleExist(req.body.title);
 
-    if ("isComplete" in req.body && 
-        typeof req.body.isComplete !== "boolean")
+    if ("is_complete" in req.body && 
+        typeof req.body.is_complete !== "boolean")
       throw {
-        Message: "isComplete debe ser un booleano",
+        Message: "is_complete debe ser un booleano",
         statusCode: 400,
       };
+
+    const relatedUser = await UserModel.findByPk(req.body.user_id)
+    
+    if(!relatedUser)
+      throw{
+        Message: `El usuario al cual quiere asignar una tarea no ha sido encontrado.`,
+        statusCode: 404
+      }
 
     const newTask = await TaskModel.create(req.body);
 
     res.status(201).json({
       Message: "Se ha creado la tarea con exito.",
-      user: newTask,
+      task: newTask,
       statusCode: 201,
     });
   } catch (err) {
+    console.log(err)
     res.status(err.statusCode || 500).json({
       Message: err.Message || "Error interno del servidor",
       statusCode: err.statusCode || 500,
@@ -109,7 +119,7 @@ export const updateTask = async (req, res) => {
   trimValues(req);
 
   try {
-    reqControlUpdate(req, ["title", "description", "isComplete"]);
+    reqControlUpdate(req, ["title", "description", "is_complete"]);
 
     const task = await TaskModel.findByPk(req.params.id);
     if (!task) {
@@ -119,16 +129,16 @@ export const updateTask = async (req, res) => {
       };
     }
 
-    for (const key of ["title", "description", "isComplete"]) {
+    for (const key of ["title", "description", "is_complete"]) {
       req.body[key] =
         req.body[key] !== undefined && req.body[key] !== ""
           ? req.body[key]
           : task[key];
     }
 
-    if ("isComplete" in req.body && typeof req.body.isComplete !== "boolean")
+    if ("is_complete" in req.body && typeof req.body.is_complete !== "boolean")
       throw {
-        Message: "isComplete debe ser un booleano",
+        Message: "is_complete debe ser un booleano",
         statusCode: 400,
       };
 
@@ -136,10 +146,10 @@ export const updateTask = async (req, res) => {
     lengthValidation(req.body);
     await titleExist(req.body.title, req.params.id);
 
-    const { title, description, isComplete } = req.body;
+    const { title, description, is_complete } = req.body;
 
     await TaskModel.update(
-      { title, description, isComplete },
+      { title, description, is_complete },
       { where: { id: req.params.id } }
     );
 
@@ -157,8 +167,14 @@ export const updateTask = async (req, res) => {
 
 export const getAlltask = async (req, res) => {
   try {
-    const tasks = await TaskModel.findAll();
-    if (!tasks.length)
+    const tasks = await TaskModel.findAll({
+      include: {
+        model: UserModel,
+        as: "author",
+        attributes: ["name", "email"]
+      }
+    });
+    if (tasks.length === 0)
       throw {
         Message: "La base de datos está vacía.",
         statusCode: 404,
@@ -174,7 +190,13 @@ export const getAlltask = async (req, res) => {
 export const getTaskById = async (req, res) => {
   const { id } = req.params;
   try {
-    const task = await TaskModel.findByPk(id);
+    const task = await TaskModel.findByPk(id, {
+      include: {
+        model: UserModel,
+        as: "author",
+        attributes: ["name", "email"]
+      }
+    });
     if (!task)
       throw {
         Message: "No se ha encontrado esa task.",
@@ -182,6 +204,7 @@ export const getTaskById = async (req, res) => {
       };
     res.status(200).json(task);
   } catch (err) {
+    console.log(err);
     res.status(err.statusCode || 500).json({
       Message: err.Message || "Error interno del servidor",
       statusCode: err.statusCode || 500,
@@ -203,6 +226,7 @@ export const deleteTask = async (req, res) => {
       statusCode: 203,
     });
   } catch (err) {
+
     res.status(err.statusCode || 500).json({
       Message: err.Message || "Error interno del servidor",
       statusCode: err.statusCode || 500,

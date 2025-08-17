@@ -1,5 +1,6 @@
 import { Op } from "sequelize";
 import { UserModel } from "../models/user.model.js";
+import { TaskModel } from "../models/task.model.js";
 
 function trimValues(req) {
   for (const key in req.body) {
@@ -122,7 +123,7 @@ export const updateUser = async (req, res) => {
   }
 };
 
-export const getAllUser = async (req, res) => {
+export const getAllUsers = async (req, res) => {
   try {
     const users = await UserModel.findAll({ attributes: ["name", "email"] });
     if (!users.length)
