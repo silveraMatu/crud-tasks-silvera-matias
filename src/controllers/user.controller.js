@@ -1,6 +1,7 @@
 import { Op } from "sequelize";
 import { UserModel } from "../models/user.model.js";
 import { TaskModel } from "../models/task.model.js";
+import { RoleModel } from "../models/role.model.js";
 
 function trimValues(req) {
   for (const key in req.body) {
