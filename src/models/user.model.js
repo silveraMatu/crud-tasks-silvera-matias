@@ -1,6 +1,7 @@
 import { DataTypes} from "sequelize";
 import { sequelize } from "../config/database.js";
 import { TaskModel } from "./task.model.js";
+import { Direccion_principal } from "./direccion_principal.model.js";
 
 export const UserModel = sequelize.define("user", {
     name: {
@@ -30,3 +31,11 @@ TaskModel.belongsTo(UserModel, {
     foreignKey: "user_id",
     as: "author"
 })
+
+UserModel.hasOne(Direccion_principal, {
+    foreignKey: "user_id", 
+    as: "direccion"})
+
+Direccion_principal.belongsTo(UserModel, {
+    foreignKey: "user_id",
+    as: "user"})

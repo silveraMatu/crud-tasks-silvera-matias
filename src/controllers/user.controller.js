@@ -2,6 +2,7 @@ import { Op } from "sequelize";
 import { UserModel } from "../models/user.model.js";
 import { TaskModel } from "../models/task.model.js";
 import { RoleModel } from "../models/role.model.js";
+import { Direccion_principal } from "../models/direccion_principal.model.js";
 
 function trimValues(req) {
   for (const key in req.body) {
@@ -126,19 +127,34 @@ export const updateUser = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await UserModel.findAll({ 
+    const users = await UserModel.findAll({
       attributes: ["name", "email"],
-      include: {
-        model: TaskModel,
-        as: "tasks",
-        attributes: ["title", "description", "is_complete"]
-      }
+      include: [
+        {
+          model: TaskModel,
+          as: "tasks",
+          attributes: ["title", "description", "is_complete"],
+        },
+        {
+          model: RoleModel,
+          as: "roles",
+          attributes: ["role"],
+          through: { attributes: [] },
+        },
+        {
+          model: Direccion_principal,
+          as: "direccion",
+          attributes: ["barrio", "calle", "altura"]
+        },
+      ],
     });
+
     if (!users.length)
       throw {
         Message: "La base de datos está vacía.",
         statusCode: 404,
       };
+
     res.status(200).json(users);
   } catch (err) {
     console.log(err);
@@ -148,22 +164,38 @@ export const getAllUsers = async (req, res) => {
     });
   }
 };
+
 export const getUserById = async (req, res) => {
   const { id } = req.params;
   try {
     const user = await UserModel.findByPk(id, {
       attributes: ["name", "email"],
-      include:{
-        model: TaskModel,
-        as: "tasks",
-        attributes: ["title", "description", "is_complete"]
-      }
+      include: [
+        {
+          model: TaskModel,
+          as: "tasks",
+          attributes: ["title", "description", "is_complete"],
+        },
+        {
+          model: RoleModel,
+          as: "roles",
+          attributes: ["role"],
+          through: { attributes: [] },
+        },
+        {
+          model: Direccion_principal,
+          as: "direccion",
+          attributes: ["barrio", "calle", "altura"]
+        },
+      ],
     });
+
     if (!user)
       throw {
         Message: "No se ha encontrado ese usuario.",
         statusCode: 404,
       };
+
     res.status(200).json(user);
   } catch (err) {
     res.status(err.statusCode || 500).json({
