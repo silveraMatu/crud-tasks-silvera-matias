@@ -68,23 +68,28 @@ export const relacionarUsersRoles = async (req, res) => {
 
 export const getAllUsersAndRoles = async (req, res) => {
   try {
-    const allUsers = await UserModel.findAll({
-      attributes: ["name", "email"],
-      include: {
+    const allUserAndRoles = await User_role.findAll({
+      include: [
+        {
+        model: UserModel,
+        as: "users",
+        attributes: ["name", "email"],
+      },
+      {
         model: RoleModel,
         as: "roles",
-        attributes: ["role"],
-        through: { attributes: [] },
-      },
+        attributes: ["role"]
+      }
+    ],
     });
 
-    if (!allUsers.length)
+    if (!allUserAndRoles.length)
       throw {
         Message: "No existen relaciones entre users y roles.",
         statusCode: 404,
       };
 
-    res.status(200).json(allUsers);
+    res.status(200).json(allUserAndRoles);
   } catch (error) {
     console.log(error);
     res.status(error.statusCode || 500).json({
@@ -98,19 +103,24 @@ export const getUserAndRolesByPk = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const user = await UserModel.findByPk(id, {
-      attributes: ["name", "email"],
-      include: {
+    const userAndRole = await User_role.findByPk(id, {
+      include: [
+        {
+        model: UserModel,
+        as: "users",
+        attributes: ["name", "email"],
+      },
+      {
         model: RoleModel,
         as: "roles",
-        attributes: ["role"],
-        through: { attributes: [] },
-      },
+        attributes: ["role"]
+      }
+    ],
     });
 
-    if (!user)
+    if (!userAndRole)
       throw {
-        Message: `No se encontró un usuario con id ${id} o no tiene roles asociados.`,
+        Message: `No se encontró una relacion con id: ${id}.`,
         statusCode: 404,
       };
 

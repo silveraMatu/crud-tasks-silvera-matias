@@ -24,3 +24,13 @@ RoleModel.belongsToMany(UserModel, {
     as: "users",
     foreignKey: "role_id"
 })
+
+User_role.belongsTo(UserModel, {
+    foreignKey: "user_id",
+    as: "users"
+})
+
+User_role.belongsTo(RoleModel, {
+    foreignKey: "role_id",
+    as: "roles"
+})
