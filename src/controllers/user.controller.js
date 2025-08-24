@@ -1,8 +1,6 @@
 import { Op } from "sequelize";
-import { UserModel } from "../models/user.model.js";
-import { TaskModel } from "../models/task.model.js";
-import { RoleModel } from "../models/role.model.js";
-import { Direccion_principal } from "../models/direccion_principal.model.js";
+import models from "../models/index.js";
+import { sequelize } from "../config/database.js";
 
 function trimValues(req) {
   for (const key in req.body) {
@@ -42,7 +40,7 @@ async function emailExist(email, id = null) {
     };
   }
 
-  const existing = await UserModel.findOne({ where });
+  const existing = await models.UserModel.findOne({ where });
   if (existing) {
     throw {
       Message: "Ese email ya existe",
@@ -71,7 +69,7 @@ export const createUser = async (req, res) => {
     lengthValidation(req.body);
     await emailExist(req.body.email);
 
-    const newUser = await UserModel.create(req.body);
+    const newUser = await models.UserModel.create(req.body);
 
     res.status(200).json({
       Message: "Se ha creado el usuario con exito.",
@@ -79,6 +77,7 @@ export const createUser = async (req, res) => {
       statusCode: 200,
     });
   } catch (err) {
+    console.log(err);
     res.status(err.statusCode || 500).json({
       Message: err.Message || "Error interno del servidor",
       statusCode: err.statusCode || 500,
@@ -92,7 +91,7 @@ export const updateUser = async (req, res) => {
   try {
     reqControl(req, ["name", "email", "password"]);
 
-    const user = await UserModel.findByPk(req.params.id);
+    const user = await models.UserModel.findByPk(req.params.id);
     if (!user) {
       throw {
         Message: "El usuario que desea actualizar no ha sido encontrado.",
@@ -111,7 +110,7 @@ export const updateUser = async (req, res) => {
     lengthValidation(req.body);
     await emailExist(req.body.email, req.params.id);
 
-    await UserModel.update(req.body, { where: { id: req.params.id } });
+    await models.UserModel.update(req.body, { where: { id: req.params.id } });
 
     res.status(200).json({
       Message: "Se ha actualizado el usuario",
@@ -127,22 +126,22 @@ export const updateUser = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await UserModel.findAll({
+    const users = await models.UserModel.findAll({
       attributes: ["name", "email"],
       include: [
         {
-          model: TaskModel,
+          model: models.TaskModel,
           as: "tasks",
           attributes: ["title", "description", "is_complete"],
         },
         {
-          model: RoleModel,
+          model: models.RoleModel,
           as: "roles",
           attributes: ["role"],
           through: { attributes: [] },
         },
         {
-          model: Direccion_principal,
+          model: models.Direccion_principal,
           as: "direccion",
           attributes: ["barrio", "calle", "altura"]
         },
@@ -168,22 +167,22 @@ export const getAllUsers = async (req, res) => {
 export const getUserById = async (req, res) => {
   const { id } = req.params;
   try {
-    const user = await UserModel.findByPk(id, {
+    const user = await models.UserModel.findByPk(id, {
       attributes: ["name", "email"],
       include: [
         {
-          model: TaskModel,
+          model: models.TaskModel,
           as: "tasks",
           attributes: ["title", "description", "is_complete"],
         },
         {
-          model: RoleModel,
+          model: models.RoleModel,
           as: "roles",
           attributes: ["role"],
           through: { attributes: [] },
         },
         {
-          model: Direccion_principal,
+          model: models.Direccion_principal,
           as: "direccion",
           attributes: ["barrio", "calle", "altura"]
         },
@@ -207,18 +206,46 @@ export const getUserById = async (req, res) => {
 
 export const deleteUser = async (req, res) => {
   const { id } = req.params;
+  const t = await sequelize.transaction()
   try {
-    const deleted = await UserModel.destroy({ where: { id } });
-    if (!deleted)
+
+
+    const userDeleted = await models.UserModel.destroy(
+      { where: { id },
+        transaction: t
+    });
+    if (!userDeleted)
       throw {
         Message: "No se ha encontrado ese usuario.",
         statusCode: 403,
       };
+
+    await models.TaskModel.destroy(
+      {where: {user_id: id},
+      transaction: t,
+      force: true
+    })
+
+    await models.Direccion_principal.destroy(
+      {where: {user_id: id},
+      transaction: t,
+      force: true
+    })
+
+    await models.User_role.destroy(
+      {where: {user_id: id},
+      transaction: t,
+      force: true
+    })
+
+    await t.commit()
+
     res.status(203).json({
       Message: `Se ha eliminado el usuario id= ${id}`,
       statusCode: 203,
     });
   } catch (err) {
+    await t.rollback()
     res.status(err.statusCode || 500).json({
       Message: err.Message || "Error interno del servidor",
       statusCode: err.statusCode || 500,

@@ -1,20 +1,29 @@
-import { DataTypes } from "sequelize";
-import { sequelize } from "../config/database.js";
+export default (sequelize, DataTypes)=>{
+    
+    const TaskModel = sequelize.define("task", {
+        title: {
+            type: DataTypes.STRING(100),
+            allowNull: false,
+            unique: false
+        },
+        description: {
+            type: DataTypes.STRING(100),
+            allowNull: false,
+        },
+        is_complete: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false
+        }
+    },{
+        timestamps: false
+    })
 
-export const TaskModel = sequelize.define("task", {
-    title: {
-        type: DataTypes.STRING(100),
-        allowNull: false,
-        unique: false
-    },
-    description: {
-        type: DataTypes.STRING(100),
-        allowNull: false,
-    },
-    is_complete: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false
+    TaskModel.associate = (models)=>{
+        TaskModel.belongsTo(models.UserModel, {
+            foreignKey: "user_id",
+            as: "author"
+        })
     }
-},{
-    timestamps: false
-})
+
+    return TaskModel
+} 

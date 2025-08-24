@@ -1,7 +1,35 @@
-import {Router}  from "express";
-import { getAllRoles } from "../controllers/roles.controller.js";
-const router = Router()
+import { Router } from "express";
+import {
+  createRole,
+  deleteRole,
+  getAllRoles,
+  getRoleById,
+  updateRole,
+} from "../controllers/roles.controller.js";
+import {
+  paramsValidation,
+  roleInDB,
+  validations,
+} from "../middlewares/role.validations.js";
+import { applyValidations } from "../middlewares/applyValidations.js";
+const router = Router();
 
-router.get("/roles", getAllRoles)
+router.post(
+  "/roles",
+  validations.custom(roleInDB),
+  applyValidations,
+  createRole
+);
+router.put(
+  "/roles/:id",
+  paramsValidation,
+  validations,
+  applyValidations,
+  updateRole
+);
 
-export default router
+router.get("/roles", getAllRoles);
+router.get("/roles/:id", paramsValidation, applyValidations, getRoleById);
+router.delete("/roles/:id", paramsValidation, applyValidations, deleteRole);
+
+export default router;

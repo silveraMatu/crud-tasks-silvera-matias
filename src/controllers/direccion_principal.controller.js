@@ -1,5 +1,4 @@
-import { Direccion_principal } from "../models/direccion_principal.model.js";
-import { UserModel } from "../models/user.model.js";
+import models from "../models/index.js";
 
 function reqControl(req, allowedKeys, requiredKeys) {
   const keys = Object.keys(req.body);
@@ -38,7 +37,7 @@ export const createDirection = async (req, res) => {
             Message: "La altura debe ser un numero entero",
             statusCode: 400
         }
-    const alturaUnica = await Direccion_principal.findOne({
+    const alturaUnica = await models.Direccion_principal.findOne({
       where: { altura },
     });
     
@@ -48,7 +47,7 @@ export const createDirection = async (req, res) => {
         statusCode: 400,
       };
 
-    const userExist = await UserModel.findByPk(req.body.user_id);
+    const userExist = await models.UserModel.findByPk(req.body.user_id);
 
     if (!userExist)
       throw {
@@ -56,7 +55,7 @@ export const createDirection = async (req, res) => {
         statusCode: 404,
       };
 
-    await Direccion_principal.create(req.body);
+    await models.Direccion_principal.create(req.body);
     res.status(201).json({
       Message: "La direccion se ha creado.",
       statusCode: 201,
@@ -72,9 +71,9 @@ export const createDirection = async (req, res) => {
 
 export const getAllDirections = async (req, res) => {
   try {
-    const directions = await Direccion_principal.findAll({
+    const directions = await models.Direccion_principal.findAll({
       include: {
-        model: UserModel,
+        model: models.UserModel,
         attributes: ["name", "email"],
         as: "user",
       },
@@ -99,9 +98,9 @@ export const getDirectionById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const direction = await Direccion_principal.findByPk(id, {
+    const direction = await models.Direccion_principal.findByPk(id, {
       include: {
-        model: UserModel,
+        model: models.UserModel,
         attributes: ["name", "email"],
         as: "user",
       },

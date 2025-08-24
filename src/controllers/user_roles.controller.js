@@ -1,6 +1,4 @@
-import { RoleModel } from "../models/role.model.js";
-import { UserModel } from "../models/user.model.js";
-import { User_role } from "../models/user_role.model.js";
+import models from "../models/index.js";
 
 function reqControl(req, allowedKeys, requiredKeys) {
   const keys = Object.keys(req.body);
@@ -36,14 +34,14 @@ export const relacionarUsersRoles = async (req, res) => {
         };
     }
 
-    const userExist = await UserModel.findOne({ where: { id: user_id } });
+    const userExist = await models.UserModel.findOne({ where: { id: user_id } });
     if (!userExist) {
       throw {
         Message: `El usuario con el id ${user_id} no existe.`,
         statusCode: 400,
       };
     }
-    const roleExist = await RoleModel.findOne({ where: { id: role_id } });
+    const roleExist = await models.RoleModel.findOne({ where: { id: role_id } });
     if (!roleExist) {
       throw {
         Message: `El role con el id ${role_id} no existe.`,
@@ -51,7 +49,7 @@ export const relacionarUsersRoles = async (req, res) => {
       };
     }
 
-    await User_role.create({ user_id, role_id });
+    await models.User_role.create({ user_id, role_id });
 
     res.status(201).json({
       Message: "Se ha creado la relacion entre el user y el role.",
@@ -68,15 +66,15 @@ export const relacionarUsersRoles = async (req, res) => {
 
 export const getAllUsersAndRoles = async (req, res) => {
   try {
-    const allUserAndRoles = await User_role.findAll({
+    const allUserAndRoles = await models.User_role.findAll({
       include: [
         {
-        model: UserModel,
+        model: models.UserModel,
         as: "users",
         attributes: ["name", "email"],
       },
       {
-        model: RoleModel,
+        model: models.RoleModel,
         as: "roles",
         attributes: ["role"]
       }
@@ -103,15 +101,15 @@ export const getUserAndRolesByPk = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const userAndRole = await User_role.findByPk(id, {
+    const userAndRole = await models.User_role.findByPk(id, {
       include: [
         {
-        model: UserModel,
+        model: models.UserModel,
         as: "users",
         attributes: ["name", "email"],
       },
       {
-        model: RoleModel,
+        model: models.RoleModel,
         as: "roles",
         attributes: ["role"]
       }

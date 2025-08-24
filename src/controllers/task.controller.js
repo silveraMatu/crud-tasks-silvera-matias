@@ -1,6 +1,4 @@
-import { Op } from "sequelize";
-import { TaskModel } from "../models/task.model.js";
-import { UserModel } from "../models/user.model.js";
+import models from "../models/index.js";
 
 function trimValues(req) {
   for (const key in req.body) {
@@ -55,7 +53,7 @@ async function titleExist(title, id = null) {
     };
   }
 
-  const existing = await TaskModel.findOne({ where });
+  const existing = await models.TaskModel.findOne({ where });
   if (existing) {
     throw {
       Message: "Ese title ya existe",
@@ -91,7 +89,7 @@ export const createTask = async (req, res) => {
         statusCode: 400,
       };
 
-    const relatedUser = await UserModel.findByPk(req.body.user_id)
+    const relatedUser = await models.UserModel.findByPk(req.body.user_id)
     
     if(!relatedUser)
       throw{
@@ -99,7 +97,7 @@ export const createTask = async (req, res) => {
         statusCode: 404
       }
 
-    const newTask = await TaskModel.create(req.body);
+    const newTask = await models.TaskModel.create(req.body);
 
     res.status(201).json({
       Message: "Se ha creado la tarea con exito.",
@@ -121,7 +119,7 @@ export const updateTask = async (req, res) => {
   try {
     reqControlUpdate(req, ["title", "description", "is_complete"]);
 
-    const task = await TaskModel.findByPk(req.params.id);
+    const task = await models.TaskModel.findByPk(req.params.id);
     if (!task) {
       throw {
         Message: "La task que desea actualizar no ha sido encontrado.",
@@ -148,7 +146,7 @@ export const updateTask = async (req, res) => {
 
     const { title, description, is_complete } = req.body;
 
-    await TaskModel.update(
+    await models.TaskModel.update(
       { title, description, is_complete },
       { where: { id: req.params.id } }
     );
@@ -167,9 +165,9 @@ export const updateTask = async (req, res) => {
 
 export const getAlltask = async (req, res) => {
   try {
-    const tasks = await TaskModel.findAll({
+    const tasks = await models.TaskModel.findAll({
       include: {
-        model: UserModel,
+        model: models.UserModel,
         as: "author",
         attributes: ["name", "email"]
       }
@@ -190,9 +188,9 @@ export const getAlltask = async (req, res) => {
 export const getTaskById = async (req, res) => {
   const { id } = req.params;
   try {
-    const task = await TaskModel.findByPk(id, {
+    const task = await models.TaskModel.findByPk(id, {
       include: {
-        model: UserModel,
+        model: models.UserModel,
         as: "author",
         attributes: ["name", "email"]
       }
@@ -215,7 +213,7 @@ export const getTaskById = async (req, res) => {
 export const deleteTask = async (req, res) => {
   const { id } = req.params;
   try {
-    const deleted = await TaskModel.destroy({ where: { id } });
+    const deleted = await models.TaskModel.destroy({ where: { id } });
     if (!deleted)
       throw {
         Message: "No se ha encontrado esa task.",

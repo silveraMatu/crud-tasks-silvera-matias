@@ -1,36 +1,30 @@
-import { DataTypes } from "sequelize";
-import { sequelize } from "../config/database.js";
-import { RoleModel } from "./role.model.js";
-import { UserModel } from "./user.model.js";
+export default (sequelize, DataTypes)=>{
 
-export const User_role = sequelize.define("user_role",{
-    id:{
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-        allowNull: false
+
+    const User_role = sequelize.define("user_role",{
+        id:{
+            type: DataTypes.INTEGER,
+            primaryKey: true,
+            autoIncrement: true,
+            allowNull: false
+        }
+    },{
+        timestamps: false
+    })
+    
+    User_role.associate = (models)=>{
+        User_role.belongsTo(models.UserModel, {
+            foreignKey: "user_id",
+            as: "users",
+            onDelete: "CASCADE"
+        })
+        
+        User_role.belongsTo(models.RoleModel, {
+            foreignKey: "role_id",
+            as: "roles",
+            onDelete: "CASCADE"
+        })
+
     }
-},{
-    timestamps: false
-})
-
-UserModel.belongsToMany(RoleModel, {
-    through: User_role, 
-    as: "roles",
-    foreignKey: "user_id"
-})
-RoleModel.belongsToMany(UserModel, {
-    through: User_role,
-    as: "users",
-    foreignKey: "role_id"
-})
-
-User_role.belongsTo(UserModel, {
-    foreignKey: "user_id",
-    as: "users"
-})
-
-User_role.belongsTo(RoleModel, {
-    foreignKey: "role_id",
-    as: "roles"
-})
+    return User_role
+}
