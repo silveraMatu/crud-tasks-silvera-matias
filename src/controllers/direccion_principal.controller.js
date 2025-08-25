@@ -1,74 +1,45 @@
+import { matchedData } from "express-validator";
 import models from "../models/index.js";
-
-function reqControl(req, allowedKeys, requiredKeys) {
-  const keys = Object.keys(req.body);
-
-  //Campos permitidos
-  if (keys.some((key) => !allowedKeys.includes(key))) {
-    throw {
-      Message: `Solo se permiten: ${allowedKeys.join(", ")}`,
-      statusCode: 400,
-    };
-  }
-
-  //Campos requeridos
-  if (requiredKeys.some((key) => !(key in req.body))) {
-    throw {
-      Message: `Faltan campos obligatorios: ${requiredKeys.join(", ")}`,
-      statusCode: 400,
-    };
-  }
-}
 
 export const createDirection = async (req, res) => {
   try {
-    reqControl(
-      req,
-      ["barrio", "calle", "altura", "user_id"],
-      ["barrio", "calle", "altura", "user_id"]
-    );
-    
-    const { altura } = req.body;
 
-    const alturaInt = Math.trunc(altura)
+    const validatedData = matchedData(req)
 
-    if(alturaInt !== altura)
-        throw{
-            Message: "La altura debe ser un numero entero",
-            statusCode: 400
-        }
-    const alturaUnica = await models.Direccion_principal.findOne({
-      where: { altura },
-    });
-    
-    if (alturaUnica)
-      throw {
-        Message: "Esa altura ya esta en uso. Mudate de casa.",
-        statusCode: 400,
-      };
-
-    const userExist = await models.UserModel.findByPk(req.body.user_id);
-
-    if (!userExist)
-      throw {
-        Message: "El usuario no ha sido encontrado.",
-        statusCode: 404,
-      };
-
-    await models.Direccion_principal.create(req.body);
+    await models.Direccion_principal.create(validatedData);
     res.status(201).json({
       Message: "La direccion se ha creado.",
       statusCode: 201,
     });
   } catch (err) {
     console.log(err);
-    res.status(err.statusCode || 500).json({
-      Message: err.Message || "Error interno del servidor",
-      statusCode: err.statusCode || 500,
+    res.status(500).json({
+      Message: "Error interno del servidor",
     });
   }
 };
 
+export const updateDirection = async(req, res)=>{
+  const validatedData = matchedData()
+  try {
+
+    const direction = await models.Direccion_principal.findByPk(req.params.id)
+    if(!direction)
+      return res.status(404).json({error: "direction not found."})
+
+    Object.keys(validatedData).forEach(key=>{
+      direction[key] = validatedData[key]
+    })
+
+    await direction.save()
+    
+  } catch (err) {
+     console.log(err);
+    res.status(500).json({
+      Message: "Error interno del servidor",
+    });
+  }
+}
 export const getAllDirections = async (req, res) => {
   try {
     const directions = await models.Direccion_principal.findAll({
@@ -121,3 +92,15 @@ export const getDirectionById = async (req, res) => {
     });
   }
 };
+
+export const deleteDirection = async(req, res)=>{
+  try {
+    const deleted = await models.Direccion_principal.findByPk(req.params.id)
+    if(!deleted)
+      return res.status(404).json({error: "direction not found"})
+
+    res.status(204)
+  } catch (error) {
+    return res.status(500).json({error: "error interno del servidor."})
+  }
+}

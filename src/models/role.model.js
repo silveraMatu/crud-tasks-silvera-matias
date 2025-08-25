@@ -3,8 +3,9 @@ export default (sequelize, DataTypes) => {
     "role",
     {
       role: {
-        type: DataTypes.STRING(),
+        type: DataTypes.STRING,
         allowNull: false,
+        unique: true
       },
     },
     {
