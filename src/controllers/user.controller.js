@@ -31,9 +31,9 @@ export const updateUser = async (req, res) => {
       };
     }
 
-    Object.keys(validatedData).forEach((key=>{
-      user[key] = validatedData[key]
-    }))
+    Object.keys(validatedData).forEach((key) => {
+      user[key] = validatedData[key];
+    });
 
     await user.save();
 
@@ -140,7 +140,7 @@ export const deleteUser = async (req, res) => {
     if (!userDeleted)
       throw {
         Message: "No se ha encontrado ese usuario.",
-        statusCode: 403,
+        statusCode: 404,
       };
 
     await models.TaskModel.destroy({
@@ -163,9 +163,8 @@ export const deleteUser = async (req, res) => {
 
     await t.commit();
 
-    res.status(203).json({
+    res.status(204).json({
       Message: `Se ha eliminado el usuario id= ${id}`,
-      statusCode: 203,
     });
   } catch (err) {
     await t.rollback();

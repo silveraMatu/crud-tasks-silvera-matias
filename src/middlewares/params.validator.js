@@ -1,5 +1,3 @@
-import { param } from "express-validator"
+import { param } from "express-validator";
 
-export const paramsValidation = 
-    param("id")
-        .isInt()
+export const paramsValidation = param("id").isInt();

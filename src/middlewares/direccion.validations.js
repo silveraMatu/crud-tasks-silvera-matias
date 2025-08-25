@@ -24,14 +24,15 @@ export const validationDireccionCreate = [
   body("user_id")
     .isInt()
     .withMessage("user_id must be an int")
-    .custom(async user_id=>{
-        const user = await models.UserModel.findByPk(user_id)
+    .notEmpty()
+    .withMessage("user_id required")
+    .custom(async (user_id) => {
+      const user = await models.UserModel.findByPk(user_id);
 
-        if(!user)
-            throw new Error("user don't found")
+      if (!user) throw new Error("user don't found");
 
-        return true
-    })
+      return true;
+    }),
 ];
 export const validationDireccionUpdate = [
   body("barrio")
@@ -56,4 +57,4 @@ export const validationDireccionUpdate = [
     .withMessage("altura must be an int")
     .notEmpty()
     .withMessage("altura required"),
-  ];
+];

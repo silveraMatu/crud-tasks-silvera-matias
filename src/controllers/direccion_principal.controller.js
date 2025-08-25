@@ -3,13 +3,12 @@ import models from "../models/index.js";
 
 export const createDirection = async (req, res) => {
   try {
-
-    const validatedData = matchedData(req)
+    const validatedData = matchedData(req);
 
     await models.Direccion_principal.create(validatedData);
     res.status(201).json({
       Message: "La direccion se ha creado.",
-      statusCode: 201,
+      direction: validatedData,
     });
   } catch (err) {
     console.log(err);
@@ -19,27 +18,27 @@ export const createDirection = async (req, res) => {
   }
 };
 
-export const updateDirection = async(req, res)=>{
-  const validatedData = matchedData()
+export const updateDirection = async (req, res) => {
+  const validatedData = matchedData(req);
   try {
+    const direction = await models.Direccion_principal.findByPk(req.params.id);
+    if (!direction)
+      return res.status(404).json({ error: "direction not found." });
 
-    const direction = await models.Direccion_principal.findByPk(req.params.id)
-    if(!direction)
-      return res.status(404).json({error: "direction not found."})
+    Object.keys(validatedData).forEach((key) => {
+      direction[key] = validatedData[key];
+    });
 
-    Object.keys(validatedData).forEach(key=>{
-      direction[key] = validatedData[key]
-    })
+    await direction.save();
 
-    await direction.save()
-    
+    res.status(200).json({ message: "direction updated" });
   } catch (err) {
-     console.log(err);
+    console.log(err);
     res.status(500).json({
       Message: "Error interno del servidor",
     });
   }
-}
+};
 export const getAllDirections = async (req, res) => {
   try {
     const directions = await models.Direccion_principal.findAll({
@@ -93,14 +92,15 @@ export const getDirectionById = async (req, res) => {
   }
 };
 
-export const deleteDirection = async(req, res)=>{
+export const deleteDirection = async (req, res) => {
   try {
-    const deleted = await models.Direccion_principal.findByPk(req.params.id)
-    if(!deleted)
-      return res.status(404).json({error: "direction not found"})
+    const deleted = await models.Direccion_principal.destroy({
+      where: { id: req.params.id },
+    });
+    if (!deleted) return res.status(404).json({ error: "direction not found" });
 
-    res.status(204)
+    res.status(204).json({ message: "direction deleted" });
   } catch (error) {
-    return res.status(500).json({error: "error interno del servidor."})
+    return res.status(500).json({ error: "error interno del servidor." });
   }
-}
+};

@@ -50,37 +50,35 @@ export const updateRole = async (req, res) => {
 
 export const getAllRoles = async (req, res) => {
   try {
+    const roles = await models.RoleModel.findAll();
+    if (!roles.length)
+      return res.status(404).json({ message: "roles is empty." });
 
-    const roles = await models.RoleModel.findAll()
-    if(!roles.length)
-      return res.status(404).json({message: "roles is empty."})
-
-    res.status(200).json(roles)
+    res.status(200).json(roles);
   } catch (error) {
-    res.status(500).json({error: "error interno del servidor"})
+    res.status(500).json({ error: "error interno del servidor" });
   }
 };
 
 export const getRoleById = async (req, res) => {
   try {
-    
-    const role = await models.RoleModel.findByPk(req.params.id)
-    if(!role)
-      return res.status(404).json({message: "role not found."})
-    res.status(200).json(role)
+    const role = await models.RoleModel.findByPk(req.params.id);
+    if (!role) return res.status(404).json({ message: "role not found." });
+    res.status(200).json(role);
   } catch (error) {
-    res.status(500).json({error: "error interno del servidor"})
+    res.status(500).json({ error: "error interno del servidor" });
   }
 };
 
 export const deleteRole = async (req, res) => {
   try {
-    const deleted = await models.RoleModel.destroy({where: {id: req.params.id}})
-    if(!deleted)
-      return res.status(404).json({error: "role not found"})
+    const deleted = await models.RoleModel.destroy({
+      where: { id: req.params.id },
+    });
+    if (!deleted) return res.status(404).json({ error: "role not found" });
 
-    res.status(204).json({message: "role deleted."})
+    res.status(204).json({ message: "role deleted." });
   } catch (error) {
-    res.status(500).json({error: "error interno del servidor."})
+    res.status(500).json({ error: "error interno del servidor." });
   }
 };

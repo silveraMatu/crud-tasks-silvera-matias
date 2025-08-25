@@ -5,7 +5,7 @@ export default (sequelize, DataTypes) => {
       role: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true
+        unique: true,
       },
     },
     {
@@ -22,5 +22,5 @@ export default (sequelize, DataTypes) => {
     });
   };
 
-  return RoleModel
+  return RoleModel;
 };

@@ -14,12 +14,7 @@ import { paramsValidation } from "../middlewares/params.validator.js";
 import { applyValidations } from "../middlewares/applyValidations.js";
 const router = Router();
 
-router.post(
-  "/users",
-  validationCreateUser,
-  applyValidations,
-  createUser
-);
+router.post("/users", validationCreateUser, applyValidations, createUser);
 
 router.get("/users", getAllUsers);
 

@@ -12,15 +12,13 @@ const models = {
   TaskModel: TaskModel(sequelize, DataTypes),
   RoleModel: RoleModel(sequelize, DataTypes),
   Direccion_principal: Direccion_principal(sequelize, DataTypes),
-}
+};
 
 console.log(models);
 
-Object.values(models)
-.forEach((model)=>{
+Object.values(models).forEach((model) => {
   console.log(model);
-  if(model.associate)
-    model.associate(models)
-})
+  if (model.associate) model.associate(models);
+});
 
-export default models
+export default models;

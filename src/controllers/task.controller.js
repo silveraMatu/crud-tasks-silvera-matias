@@ -2,10 +2,8 @@ import { matchedData } from "express-validator";
 import models from "../models/index.js";
 
 export const createTask = async (req, res) => {
-
-  const validatedData = matchedData(req)
+  const validatedData = matchedData(req);
   try {
-
     const newTask = await models.TaskModel.create(validatedData);
 
     res.status(201).json({
@@ -14,18 +12,16 @@ export const createTask = async (req, res) => {
       statusCode: 201,
     });
   } catch (err) {
-    console.log(err)
+    console.log(err);
     res.status(500).json({
-      Message: "Error interno del servidor"
+      Message: "Error interno del servidor",
     });
   }
 };
 
 export const updateTask = async (req, res) => {
-
-  const validatedData = matchedData(req)
+  const validatedData = matchedData(req);
   try {
-
     const task = await models.TaskModel.findByPk(req.params.id);
     if (!task) {
       throw {
@@ -34,11 +30,11 @@ export const updateTask = async (req, res) => {
       };
     }
 
-    Object.keys(validatedData).forEach(key=>{
-      task[key] = validatedData[key]
-    })
+    Object.keys(validatedData).forEach((key) => {
+      task[key] = validatedData[key];
+    });
 
-    await task.save()
+    await task.save();
 
     res.status(200).json({
       Message: "Se ha actualizado la task",
@@ -58,8 +54,8 @@ export const getAlltask = async (req, res) => {
       include: {
         model: models.UserModel,
         as: "author",
-        attributes: ["name", "email"]
-      }
+        attributes: ["name", "email"],
+      },
     });
     if (!tasks.length)
       throw {
@@ -81,8 +77,8 @@ export const getTaskById = async (req, res) => {
       include: {
         model: models.UserModel,
         as: "author",
-        attributes: ["name", "email"]
-      }
+        attributes: ["name", "email"],
+      },
     });
     if (!task)
       throw {
@@ -113,7 +109,6 @@ export const deleteTask = async (req, res) => {
       statusCode: 203,
     });
   } catch (err) {
-
     res.status(err.statusCode || 500).json({
       Message: err.Message || "Error interno del servidor",
       statusCode: err.statusCode || 500,
