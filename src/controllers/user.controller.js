@@ -1,96 +1,28 @@
-import { Op } from "sequelize";
 import models from "../models/index.js";
 import { sequelize } from "../config/database.js";
-
-function trimValues(req) {
-  for (const key in req.body) {
-    if (typeof req.body[key] === "string") {
-      req.body[key] = req.body[key].trim();
-    }
-  }
-}
-
-function lengthValidation(obj) {
-  for (const key in obj) {
-    if (typeof obj[key] === "string" && obj[key].length > 100) {
-      throw {
-        Message: `${key} no puede tener más de 100 caracteres.`,
-        statusCode: 400,
-      };
-    }
-  }
-}
-
-function reqControl(req, allowedKeys) {
-  const keys = Object.keys(req.body);
-  if (keys.some((key) => !allowedKeys.includes(key))) {
-    throw {
-      Message: "La petición solo acepta los datos 'name', 'email' y 'password'",
-      statusCode: 400,
-    };
-  }
-}
-
-async function emailExist(email, id = null) {
-  let where = { email };
-  if (id) {
-    where = {
-      email,
-      id: { [Op.ne]: id },
-    };
-  }
-
-  const existing = await models.UserModel.findOne({ where });
-  if (existing) {
-    throw {
-      Message: "Ese email ya existe",
-      statusCode: 400,
-    };
-  }
-}
-
-function notNullValues(obj) {
-  for (const key in obj) {
-    if (obj[key] === null || obj[key] === undefined || obj[key] === "") {
-      throw {
-        Message: `${key} no puede estar vacío.`,
-        statusCode: 400,
-      };
-    }
-  }
-}
+import { matchedData } from "express-validator";
 
 export const createUser = async (req, res) => {
-  trimValues(req);
+  const validatedData = matchedData(req);
 
   try {
-    reqControl(req, ["name", "email", "password"]);
-    notNullValues(req.body);
-    lengthValidation(req.body);
-    await emailExist(req.body.email);
-
-    const newUser = await models.UserModel.create(req.body);
+    const newUser = await models.UserModel.create(validatedData);
 
     res.status(200).json({
       Message: "Se ha creado el usuario con exito.",
       user: newUser,
-      statusCode: 200,
     });
   } catch (err) {
     console.log(err);
-    res.status(err.statusCode || 500).json({
-      Message: err.Message || "Error interno del servidor",
-      statusCode: err.statusCode || 500,
+    res.status(500).json({
+      message: "Error interno del servidor",
     });
   }
 };
 
 export const updateUser = async (req, res) => {
-  trimValues(req);
-
+  const validatedData = matchedData(req);
   try {
-    reqControl(req, ["name", "email", "password"]);
-
     const user = await models.UserModel.findByPk(req.params.id);
     if (!user) {
       throw {
@@ -99,18 +31,11 @@ export const updateUser = async (req, res) => {
       };
     }
 
-    for (const key of ["name", "email", "password"]) {
-      req.body[key] =
-        req.body[key] !== undefined && req.body[key] !== ""
-          ? req.body[key]
-          : user[key];
-    }
+    Object.keys(validatedData).forEach((key=>{
+      user[key] = validatedData[key]
+    }))
 
-    notNullValues(req.body);
-    lengthValidation(req.body);
-    await emailExist(req.body.email, req.params.id);
-
-    await models.UserModel.update(req.body, { where: { id: req.params.id } });
+    await user.save();
 
     res.status(200).json({
       Message: "Se ha actualizado el usuario",
@@ -143,7 +68,7 @@ export const getAllUsers = async (req, res) => {
         {
           model: models.Direccion_principal,
           as: "direccion",
-          attributes: ["barrio", "calle", "altura"]
+          attributes: ["barrio", "calle", "altura"],
         },
       ],
     });
@@ -184,7 +109,7 @@ export const getUserById = async (req, res) => {
         {
           model: models.Direccion_principal,
           as: "direccion",
-          attributes: ["barrio", "calle", "altura"]
+          attributes: ["barrio", "calle", "altura"],
         },
       ],
     });
@@ -206,13 +131,11 @@ export const getUserById = async (req, res) => {
 
 export const deleteUser = async (req, res) => {
   const { id } = req.params;
-  const t = await sequelize.transaction()
+  const t = await sequelize.transaction();
   try {
-
-
-    const userDeleted = await models.UserModel.destroy(
-      { where: { id },
-        transaction: t
+    const userDeleted = await models.UserModel.destroy({
+      where: { id },
+      transaction: t,
     });
     if (!userDeleted)
       throw {
@@ -220,32 +143,32 @@ export const deleteUser = async (req, res) => {
         statusCode: 403,
       };
 
-    await models.TaskModel.destroy(
-      {where: {user_id: id},
+    await models.TaskModel.destroy({
+      where: { user_id: id },
       transaction: t,
-      force: true
-    })
+      force: true,
+    });
 
-    await models.Direccion_principal.destroy(
-      {where: {user_id: id},
+    await models.Direccion_principal.destroy({
+      where: { user_id: id },
       transaction: t,
-      force: true
-    })
+      force: true,
+    });
 
-    await models.User_role.destroy(
-      {where: {user_id: id},
+    await models.User_role.destroy({
+      where: { user_id: id },
       transaction: t,
-      force: true
-    })
+      force: true,
+    });
 
-    await t.commit()
+    await t.commit();
 
     res.status(203).json({
       Message: `Se ha eliminado el usuario id= ${id}`,
       statusCode: 203,
     });
   } catch (err) {
-    await t.rollback()
+    await t.rollback();
     res.status(err.statusCode || 500).json({
       Message: err.Message || "Error interno del servidor",
       statusCode: err.statusCode || 500,

@@ -7,11 +7,11 @@ import {
   updateRole,
 } from "../controllers/roles.controller.js";
 import {
-  paramsValidation,
   roleInDB,
   validations,
 } from "../middlewares/role.validations.js";
 import { applyValidations } from "../middlewares/applyValidations.js";
+import { paramsValidation } from "../middlewares/params.validator.js";
 const router = Router();
 
 router.post(

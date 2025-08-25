@@ -1,4 +1,3 @@
-import { where } from "sequelize";
 import models from "./index.js";
 
 export default (sequelize, DataTypes) => {
@@ -25,25 +24,6 @@ export default (sequelize, DataTypes) => {
       updatedAt: false,
     }
   );
-
-  //HOOKS
-
-  UserModel.addHook("afterDestroy", async (user, options) => {
-    await models.TaskModel.destroy({
-      where: { user_id: user.id },
-      force: true,
-    });
-
-    await models.Direccion_principal.destroy({
-      where: { user_id: user.id },
-      force: true,
-    });
-
-    await models.User_role.destroy({
-      where: { user_id: user.id },
-      force: true,
-    });
-  });
 
   //RELACIONES
 
